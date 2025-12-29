@@ -1,12 +1,26 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Player, Reward, HorizontalBar, GameState } from './types';
+import { Player, Reward, HorizontalBar } from './types';
 import SetupForm from './components/SetupForm';
 import LadderBoard from './components/LadderBoard';
 import { Sparkles, Trophy, Users } from 'lucide-react';
-import { getCuteNicknames, getFunMissions } from './services/geminiService';
 
 const AVATARS = ['🐶', '🐱', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🦁', '🐯'];
+const NICKNAMES = [
+  '웃음보따리 토끼', '춤추는 곰돌이', '무지개 사탕', '씩씩한 다람쥐', 
+  '구름 위 고양이', '반짝이는 별이', '새콤달콤 딸기', '노래하는 파랑새',
+  '폭신한 구름이', '용감한 사자', '깜찍한 햄스터', '신비한 유니콘'
+];
+const MISSIONS = [
+  '엉덩이로 이름 쓰기', '귀여운 표정 짓기', '옆 친구 칭찬하기', '코끼리 코 5바퀴', 
+  '좋아하는 노래 한 구절', '토끼 뜀 3번 뛰기', '사랑의 하트 날리기', '윙크 세 번 하기',
+  '동물 소리 흉내내기', '자신 있는 포즈 취하기', '앞 친구랑 하이파이브', '웃긴 얼굴 만들기'
+];
+
+const getRandom = (arr: string[], count: number) => {
+  const shuffled = [...arr].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+};
 
 const App: React.FC = () => {
   const [step, setStep] = useState<'setup' | 'game' | 'result'>('setup');
@@ -19,17 +33,11 @@ const App: React.FC = () => {
     { id: '2', text: '노래 부르기' }
   ]);
   const [bars, setBars] = useState<HorizontalBar[]>([]);
-  const [isAiLoading, setIsAiLoading] = useState(false);
 
-  // Auto-generate nicknames on mount
+  // Initialize with fun nicknames on mount
   useEffect(() => {
-    const loadInitial = async () => {
-      setIsAiLoading(true);
-      const names = await getCuteNicknames(2);
-      setPlayers(names.map((n, i) => ({ id: `${i}`, name: n, avatar: AVATARS[i % AVATARS.length] })));
-      setIsAiLoading(false);
-    };
-    loadInitial();
+    const names = getRandom(NICKNAMES, 2);
+    setPlayers(names.map((n, i) => ({ id: `${i}`, name: n, avatar: AVATARS[i % AVATARS.length] })));
   }, []);
 
   const handleStartGame = (finalPlayers: Player[], finalRewards: Reward[]) => {
@@ -60,18 +68,14 @@ const App: React.FC = () => {
     setStep('setup');
   };
 
-  const handleUseAiNames = async () => {
-    setIsAiLoading(true);
-    const names = await getCuteNicknames(players.length);
+  const handleUseRandomNames = () => {
+    const names = getRandom(NICKNAMES, players.length);
     setPlayers(prev => prev.map((p, i) => ({ ...p, name: names[i] || p.name })));
-    setIsAiLoading(false);
   };
 
-  const handleUseAiRewards = async () => {
-    setIsAiLoading(true);
-    const missions = await getFunMissions(rewards.length);
+  const handleUseRandomRewards = () => {
+    const missions = getRandom(MISSIONS, rewards.length);
     setRewards(prev => prev.map((r, i) => ({ ...r, text: missions[i] || r.text })));
-    setIsAiLoading(false);
   };
 
   return (
@@ -93,9 +97,8 @@ const App: React.FC = () => {
             players={players} 
             rewards={rewards} 
             onStart={handleStartGame}
-            onAiNames={handleUseAiNames}
-            onAiRewards={handleUseAiRewards}
-            isAiLoading={isAiLoading}
+            onRandomNames={handleUseRandomNames}
+            onRandomRewards={handleUseRandomRewards}
           />
         )}
 

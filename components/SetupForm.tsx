@@ -7,14 +7,13 @@ interface SetupFormProps {
   players: Player[];
   rewards: Reward[];
   onStart: (p: Player[], r: Reward[]) => void;
-  onAiNames: () => void;
-  onAiRewards: () => void;
-  isAiLoading: boolean;
+  onRandomNames: () => void;
+  onRandomRewards: () => void;
 }
 
 const AVATARS = ['🐶', '🐱', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🦁', '🐯'];
 
-const SetupForm: React.FC<SetupFormProps> = ({ players, rewards, onStart, onAiNames, onAiRewards, isAiLoading }) => {
+const SetupForm: React.FC<SetupFormProps> = ({ players, rewards, onStart, onRandomNames, onRandomRewards }) => {
   const [localPlayers, setLocalPlayers] = useState<Player[]>(players);
   const [localRewards, setLocalRewards] = useState<Reward[]>(rewards);
 
@@ -38,6 +37,21 @@ const SetupForm: React.FC<SetupFormProps> = ({ players, rewards, onStart, onAiNa
   const updateRewardText = (id: string, text: string) => {
     setLocalRewards(localRewards.map(r => r.id === id ? { ...r, text } : r));
   };
+
+  const handleRandomNames = () => {
+    onRandomNames();
+    // Re-sync local state with the props passed down (in a real app you might use a ref or managed state higher up)
+    // For simplicity, let's just trigger the callback which the parent App.tsx handles.
+  };
+
+  // Because parent updates players/rewards, we need to sync local state if parent state changes via random buttons
+  React.useEffect(() => {
+    setLocalPlayers(players);
+  }, [players]);
+
+  React.useEffect(() => {
+    setLocalRewards(rewards);
+  }, [rewards]);
 
   return (
     <div className="space-y-8">
@@ -66,24 +80,23 @@ const SetupForm: React.FC<SetupFormProps> = ({ players, rewards, onStart, onAiNa
         {/* Players Section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-pink-500">누가 참여하나요?</h3>
+            <h3 className="text-xl font-bold text-pink-500">참여하는 친구</h3>
             <button 
-              onClick={onAiNames}
-              disabled={isAiLoading}
-              className="flex items-center gap-1 text-sm bg-pink-100 text-pink-600 px-3 py-1 rounded-full hover:bg-pink-200 transition-colors"
+              onClick={onRandomNames}
+              className="flex items-center gap-1 text-sm bg-pink-100 text-pink-600 px-3 py-1 rounded-full hover:bg-pink-200 transition-colors font-bold"
             >
-              <Wand2 size={16} /> AI 닉네임
+              <Wand2 size={16} /> 랜덤 닉네임
             </button>
           </div>
           <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-            {localPlayers.map((player, idx) => (
+            {localPlayers.map((player) => (
               <div key={player.id} className="flex items-center gap-3 bg-white border-2 border-pink-100 p-2 rounded-xl">
                 <span className="text-3xl">{player.avatar}</span>
                 <input 
                   type="text"
                   value={player.name}
                   onChange={(e) => updatePlayerName(player.id, e.target.value)}
-                  className="flex-1 border-none focus:ring-0 text-lg font-medium text-gray-700 placeholder-gray-300"
+                  className="flex-1 border-none focus:ring-0 text-lg font-medium text-gray-700 placeholder-gray-300 bg-transparent"
                   placeholder="이름 입력"
                 />
               </div>
@@ -94,13 +107,12 @@ const SetupForm: React.FC<SetupFormProps> = ({ players, rewards, onStart, onAiNa
         {/* Rewards Section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-purple-500">결과는 무엇인가요?</h3>
+            <h3 className="text-xl font-bold text-purple-500">벌칙/미션</h3>
             <button 
-              onClick={onAiRewards}
-              disabled={isAiLoading}
-              className="flex items-center gap-1 text-sm bg-purple-100 text-purple-600 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
+              onClick={onRandomRewards}
+              className="flex items-center gap-1 text-sm bg-purple-100 text-purple-600 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors font-bold"
             >
-              <Wand2 size={16} /> AI 미션
+              <Wand2 size={16} /> 랜덤 미션
             </button>
           </div>
           <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
@@ -113,7 +125,7 @@ const SetupForm: React.FC<SetupFormProps> = ({ players, rewards, onStart, onAiNa
                   type="text"
                   value={reward.text}
                   onChange={(e) => updateRewardText(reward.id, e.target.value)}
-                  className="flex-1 border-none focus:ring-0 text-lg font-medium text-gray-700 placeholder-gray-300"
+                  className="flex-1 border-none focus:ring-0 text-lg font-medium text-gray-700 placeholder-gray-300 bg-transparent"
                   placeholder="보상이나 미션"
                 />
               </div>
@@ -129,15 +141,6 @@ const SetupForm: React.FC<SetupFormProps> = ({ players, rewards, onStart, onAiNa
         <Play fill="white" />
         모험 시작하기!
       </button>
-
-      {isAiLoading && (
-        <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10 rounded-3xl backdrop-blur-[1px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-pink-500 mx-auto mb-4"></div>
-            <p className="text-lg font-bold text-pink-600">AI가 반짝이는 아이디어를 가져오고 있어요...</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
